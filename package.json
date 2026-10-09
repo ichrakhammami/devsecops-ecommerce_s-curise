@@ -1,0 +1,12 @@
+{
+  "name": "devsecops-ecommerce",
+  "version": "1.0.0",
+  "description": "Cas pratique DevSecOps - Version Sécurisée",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js"
+  },
+  "dependencies": {
+    "express": "4.19.2"
+  }
+}
