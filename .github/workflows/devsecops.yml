@@ -1,0 +1,51 @@
+name: Pipeline DevSecOps E-Commerce
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  # 1. SAST : Analyse statique du code (Détecte les secrets dans app.js)
+  sast_scan:
+    name: 🔍 1. SAST - Analyse du Code (Semgrep)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Télécharger le code source
+        uses: actions/checkout@v4
+
+      - name: Exécuter Semgrep (SAST)
+        uses: returntocorp/semgrep-action@v1
+        with:
+          config: p/javascript p/owasp-top-10
+
+  # 2. SCA : Analyse des dépendances (Détecte Express 4.0.0 obsolète)
+  dependency_scan:
+    name: 📦 2. SCA - Scan des Dépendances (Trivy)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Télécharger le code source
+        uses: actions/checkout@v4
+
+      - name: Exécuter Trivy (SCA)
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scanners: 'vuln,secret'
+          severity: 'HIGH,CRITICAL'
+
+  # 3. Docker Scan : Vérification de l'image de base
+  container_scan:
+    name: 🐳 3. Scan de Sécurité Docker
+    needs: [sast_scan, dependency_scan]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Télécharger le code source
+        uses: actions/checkout@v4
+
+      - name: Vérification de l'image de base Node.js
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: 'node:18-alpine'
+          severity: 'CRITICAL'
